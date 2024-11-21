@@ -1,0 +1,41 @@
+---
+title: "Research Sprint Assignment"
+author: "Alana, Amit, and Kelly"
+date: "2024-11-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Create Dataframe
+
+```{r, message=FALSE}
+files<-list.files("data",recursive = TRUE,full.names = TRUE,pattern="puf")
+pulse<-map_df(files,read_csv)
+
+```
+Filter data by income below 35k per year, then group by Race, Price Stress, and Region
+```{r}
+pstress_region<-pulse %>%
+  filter(PRICESTRESS>0,INCOME==1|INCOME==2)%>%
+  group_by(RRACE,PRICESTRESS,REGION) %>%
+  mutate(REGION=as.character(REGION),RRACE=as.character(RRACE)) %>%
+  summarise(count=sum(PWEIGHT)) %>%
+  pivot_wider(names_from=PRICESTRESS,values_from=count) %>%
+  mutate(total=sum(`1`+`2`+`3`+`4`),"pct_very"=`1`/total*100,"pct_mod"=((`1`+`2`)/total)) 
+```
+
+```{r}
+ggplot(pstress_region,aes(x=REGION,y=pct_very,fill=RRACE,group=RRACE))+
+  geom_bar(position="dodge",stat="identity")+
+  scale_fill_discrete(name="Race",labels=c("White Alone", "Black Alone","Asian Alone","Other/Combination"))+
+  scale_x_discrete(labels=c("Northeast","South","Midwest","West"))+
+  labs(y="% Very Stressed About Price Changes",title="Price Change Stress by Race and Region (Yearly Income <35k)")
+```
+```{r}
+
+```
+
